@@ -50,18 +50,19 @@ class block_grades_at_a_glance extends block_list {
 
             $id = $course->id;
 
+            $coursename = gaag_get_shortname($course->shortname);
+
             foreach ($roles_in_course as $role_in_course) {
                 if (in_array($role_in_course->roleid, $gradebook_roles)) {
                     $url = new moodle_url($link_common, array('id' => $id));
 
-                    $coursename = get_formatted_shortname($course->shortname);
                     $content = html_writer::link($url, $coursename);
-                    $params = array('class', 'gaag_course');
+                    $params = array('class' => 'gaag_course');
 
                     $left_part = html_writer::tag('span', $content, $params);
 
                     $content = gaag_get_grade_for_course($id, $USER->id);
-                    $params = array('class', 'gaag_grade');
+                    $params = array('class' => 'gaag_grade');
 
                     $right_part = html_writer::tag('span', $content, $params);
 

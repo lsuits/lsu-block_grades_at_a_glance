@@ -17,5 +17,6 @@
 .block_grades_at_a_glance span.gaag_grade {
     font-weight: bold;
     margin-top: .25em;
+    padding-left: .50em;
     float: right;
 }
