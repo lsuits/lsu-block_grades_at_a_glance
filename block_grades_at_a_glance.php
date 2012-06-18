@@ -14,7 +14,7 @@ class block_grades_at_a_glance extends block_list {
     }
 
     function applicable_formats() {
-        return array('site' => false, 'my' => true, 'course' => false);
+        return array('site' => true, 'my' => true, 'course' => false);
     }
 
     function get_content() {
@@ -73,10 +73,12 @@ class block_grades_at_a_glance extends block_list {
             }
         }
 
+/*      Hide this block completely from instructors.
         // User is only in non-gradable roles in the courses they are enrolled in
         if (!count($this->content->items)) {
             $this->content->items = array($no_courses_str);
         }
+*/
 
         return $this->content;
     }
