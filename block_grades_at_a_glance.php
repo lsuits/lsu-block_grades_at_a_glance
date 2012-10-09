@@ -69,6 +69,7 @@ class block_grades_at_a_glance extends block_list {
                     $content = $left_part . $right_part;
 
                     $this->content->items[] = html_writer::tag('p', $content);
+                    break;
                 }
             }
         }
