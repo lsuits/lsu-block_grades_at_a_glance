@@ -35,7 +35,7 @@ class block_grades_at_a_glance extends block_list {
         $no_courses_str = get_string('no_courses', 'block_grades_at_a_glance');
 
         // Return early if this user is enrolled in zero courses
-        if (!$courses = enrol_get_my_courses()) {
+        if (!$courses = enrol_get_my_courses('showgrades')) {
             $this->content->items = array($no_courses_str);
 
             return $this->content;
@@ -61,7 +61,11 @@ class block_grades_at_a_glance extends block_list {
 
                     $left_part = html_writer::tag('span', $content, $params);
 
-                    $content = gaag_get_grade_for_course($id, $USER->id);
+                    if ($course->showgrades) {
+                        $content = gaag_get_grade_for_course($id, $USER->id);
+                    } else {
+                        $content = get_string('hidden', 'block_grades_at_a_glance');
+                    }
                     $params = array('class' => 'gaag_grade');
 
                     $right_part = html_writer::tag('span', $content, $params);
