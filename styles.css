@@ -8,6 +8,10 @@
     height: 2.5em;
 }
 
+.block_grades_at_a_glance div.c1 {
+    display: block !important;
+}
+
 .block_grades_at_a_glance span.gaag_course {
     float: left;
     margin-top: .25em;
