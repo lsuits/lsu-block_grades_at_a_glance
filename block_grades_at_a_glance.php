@@ -35,7 +35,7 @@ class block_grades_at_a_glance extends block_list {
         $no_courses_str = get_string('no_courses', 'block_grades_at_a_glance');
 
         // Return early if this user is enrolled in zero courses
-        if (!$courses = enrol_get_my_courses()) {
+        if (!$courses = enrol_get_my_courses($fields = 'showgrades')) {
             $this->content->items = array($no_courses_str);
 
             return $this->content;
@@ -45,7 +45,7 @@ class block_grades_at_a_glance extends block_list {
         $link_common = '/grade/report/user/index.php';
 
         foreach ($courses as $course) {
-            $course_context = get_context_instance(CONTEXT_COURSE, $course->id);
+            $course_context = context_course::instance($course->id);
             $roles_in_course = get_user_roles($course_context);
 
             $id = $course->id;
@@ -65,6 +65,8 @@ class block_grades_at_a_glance extends block_list {
                     $params = array('class' => 'gaag_grade');
 
                     $right_part = html_writer::tag('span', $content, $params);
+
+                    $right_part = $course->showgrades == 1 ? html_writer::tag('span', $content, $params) : html_writer::tag('span', '-', $params);
 
                     $content = $left_part . $right_part;
 
