@@ -16,3 +16,4 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 $plugin->version = 2013062708;
+$plugin->component = 'block_grades_at_a_glance';
