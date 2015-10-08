@@ -59,9 +59,9 @@ class grade_report_grades_at_a_glance extends grade_report {
      * @param object $gpr grade plugin return tracking object
      * @param string $context
      */
-    public function __construct($userid, $gpr, $context) {
+    public function __construct($userid, $courseid, $gpr, $context) {
         global $CFG, $COURSE, $DB;
-        parent::__construct($COURSE->id, $gpr, $context);
+        parent::__construct($courseid, $gpr, $context);
 
         // Get the user (for full name).
         $this->user = $DB->get_record('user', array('id' => $userid));
@@ -73,7 +73,7 @@ class grade_report_grades_at_a_glance extends grade_report {
         $this->showrank['any'] = false;
 
         $this->showtotalsifcontainhidden = array();
-
+        
         $this->studentcourseids = array();
         $this->teachercourses = array();
         $roleids = explode(',', get_config('moodle', 'gradebookroles'));
@@ -86,7 +86,11 @@ class grade_report_grades_at_a_glance extends grade_report {
                 }
 
                 $this->showtotalsifcontainhidden[$course->id] = grade_get_setting($course->id, 'report_overview_showtotalsifcontainhidden', $CFG->grade_report_overview_showtotalsifcontainhidden);
-
+                
+                echo 'show totals if contain hidden = ' ;
+                
+                var_dump($this->showtotalsifcontainhidden);
+                
                 $coursecontext = context_course::instance($course->id);
 
                 foreach ($roleids as $roleid) {
@@ -105,8 +109,8 @@ class grade_report_grades_at_a_glance extends grade_report {
 
 
         // base url for sorting by first/last name
-        $this->baseurl = $CFG->wwwroot.'/grade/overview/index.php?id='.$userid;
-        $this->pbarurl = $this->baseurl;
+//        $this->baseurl = $CFG->wwwroot.'/grade/overview/index.php?id='.$userid;
+//        $this->pbarurl = $this->baseurl;
 
     }
     function process_action($target, $action) {
@@ -117,35 +121,20 @@ class grade_report_grades_at_a_glance extends grade_report {
     }
 
     function get_blank_hidden_total_and_adjust_bounds($courseid, $course_total_item, $finalgrade){
-        //var_dump($this);
-
-        $this->user->id = $this->gpr->userid;
 
         return($this->blank_hidden_total_and_adjust_bounds($courseid, $course_total_item, $finalgrade));
     }
 }
-function gaag_grade_report($courseid, $userid, $finalgrade, $course_total_item){
-    $gpr = new grade_plugin_return(array(
-        'type' => 'report',
-        'plugin' => 'quick_edit',
-        'courseid' => $courseid,
-        'userid' => $userid
-    ));
 
-    // course_context
-    $course_context = context_course::instance($courseid);
 
-    $report = new grade_report_grades_at_a_glance($courseid, $gpr, $course_context, 'user', $userid);
-
-    return $report;
-    //$gaag_grade_report = new grade_report_grades_at_a_glance();
-    //var_dump($report);
-}
 
 // Returns the formatted course total item value give a userid and a course id
 function gaag_get_grade_for_course($courseid, $userid) {
+
     $course_total_item = grade_item::fetch_course_item($courseid);
 
+    echo '<br /> var dump the course total item <br />';
+    var_dump($course_total_item);
     if (!$course_total_item) {
         return '-';
     }
@@ -169,7 +158,18 @@ function gaag_get_grade_for_course($courseid, $userid) {
             $course_total_item, true
         );
     }
-    $report = gaag_grade_report($courseid, $userid, $finalgrade, $course_total_item);
+    
+    $course_context = context_course::instance($courseid);
+    
+    $gpr = new grade_plugin_return(array(
+        'type' => 'report',
+        'plugin' => 'grades_at_a_glance',
+        'courseid' => $courseid,
+        'userid' => $userid
+    ));
+
+    $report = new grade_report_grades_at_a_glance($courseid, $userid, $gpr, $course_context);
+
     var_dump($report->get_blank_hidden_total_and_adjust_bounds($courseid, $course_total_item, $finalgrade));
 
     return($report->get_blank_hidden_total_and_adjust_bounds($courseid, $course_total_item, $finalgrade)['grade']);
