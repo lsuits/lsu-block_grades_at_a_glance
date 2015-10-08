@@ -3,6 +3,144 @@
 require_once($CFG->libdir . '/grade/grade_item.php');
 require_once($CFG->libdir . '/grade/grade_grade.php');
 require_once($CFG->libdir . '/gradelib.php');
+require_once($CFG->dirroot . '/grade/report/lib.php');
+require_once($CFG->dirroot . '/grade/lib.php');
+
+// Class to get grade report functions and variables from parent class in grade/report/lib.php
+// @todo a lot of code in the constructor could be taken out as a lot of this code is
+// copied from quickedit
+
+class grade_report_grades_at_a_glance extends grade_report {
+
+    /**
+     * The user.
+     * @var object $user
+     */
+    public $user;
+
+    /**
+     * The user's courses
+     * @var array $courses
+     */
+    public $courses;
+
+    /**
+     * A flexitable to hold the data.
+     * @var object $table
+     */
+    public $table;
+
+    /**
+     * Show student ranks within each course.
+     * @var array $showrank
+     */
+    public $showrank;
+
+    /**
+     * show course/category totals if they contain hidden items
+     */
+    var $showtotalsifcontainhidden;
+
+    /**
+     * An array of course ids that the user is a student in.
+     * @var array $studentcourseids
+     */
+    public $studentcourseids;
+
+    /**
+     * An array of courses that the user is a teacher in.
+     * @var array $teachercourses
+     */
+    public $teachercourses;
+
+    /**
+     * Constructor. Sets local copies of user preferences and initialises grade_tree.
+     * @param int $userid
+     * @param object $gpr grade plugin return tracking object
+     * @param string $context
+     */
+    public function __construct($userid, $gpr, $context) {
+        global $CFG, $COURSE, $DB;
+        parent::__construct($COURSE->id, $gpr, $context);
+
+        // Get the user (for full name).
+        $this->user = $DB->get_record('user', array('id' => $userid));
+
+        // Load the user's courses.
+        $this->courses = enrol_get_users_courses($this->user->id, false, 'id, shortname, showgrades');
+
+        $this->showrank = array();
+        $this->showrank['any'] = false;
+
+        $this->showtotalsifcontainhidden = array();
+
+        $this->studentcourseids = array();
+        $this->teachercourses = array();
+        $roleids = explode(',', get_config('moodle', 'gradebookroles'));
+
+        if ($this->courses) {
+            foreach ($this->courses as $course) {
+                $this->showrank[$course->id] = grade_get_setting($course->id, 'report_overview_showrank', !empty($CFG->grade_report_overview_showrank));
+                if ($this->showrank[$course->id]) {
+                    $this->showrank['any'] = true;
+                }
+
+                $this->showtotalsifcontainhidden[$course->id] = grade_get_setting($course->id, 'report_overview_showtotalsifcontainhidden', $CFG->grade_report_overview_showtotalsifcontainhidden);
+
+                $coursecontext = context_course::instance($course->id);
+
+                foreach ($roleids as $roleid) {
+                    if (user_has_role_assignment($userid, $roleid, $coursecontext->id)) {
+                        $this->studentcourseids[$course->id] = $course->id;
+                        // We only need to check if one of the roleids has been assigned.
+                        break;
+                    }
+                }
+
+                if (has_capability('moodle/grade:viewall', $coursecontext, $userid)) {
+                    $this->teachercourses[$course->id] = $course;
+                }
+            }
+        }
+
+
+        // base url for sorting by first/last name
+        $this->baseurl = $CFG->wwwroot.'/grade/overview/index.php?id='.$userid;
+        $this->pbarurl = $this->baseurl;
+
+    }
+    function process_action($target, $action) {
+    }
+
+    function process_data($data) {
+        return $this->screen->process($data);
+    }
+
+    function get_blank_hidden_total_and_adjust_bounds($courseid, $course_total_item, $finalgrade){
+        //var_dump($this);
+
+        $this->user->id = $this->gpr->userid;
+
+        return($this->blank_hidden_total_and_adjust_bounds($courseid, $course_total_item, $finalgrade));
+    }
+}
+function gaag_grade_report($courseid, $userid, $finalgrade, $course_total_item){
+    $gpr = new grade_plugin_return(array(
+        'type' => 'report',
+        'plugin' => 'quick_edit',
+        'courseid' => $courseid,
+        'userid' => $userid
+    ));
+
+    // course_context
+    $course_context = context_course::instance($courseid);
+
+    $report = new grade_report_grades_at_a_glance($courseid, $gpr, $course_context, 'user', $userid);
+
+    return $report;
+    //$gaag_grade_report = new grade_report_grades_at_a_glance();
+    //var_dump($report);
+}
 
 // Returns the formatted course total item value give a userid and a course id
 function gaag_get_grade_for_course($courseid, $userid) {
@@ -31,8 +169,12 @@ function gaag_get_grade_for_course($courseid, $userid) {
             $course_total_item, true
         );
     }
+    $report = gaag_grade_report($courseid, $userid, $finalgrade, $course_total_item);
+    var_dump($report->get_blank_hidden_total_and_adjust_bounds($courseid, $course_total_item, $finalgrade));
 
-    return $finalgrade;
+    return($report->get_blank_hidden_total_and_adjust_bounds($courseid, $course_total_item, $finalgrade)['grade']);
+
+    //return $finalgrade;
 }
 
 function gaag_get_shortname($shortname) {
@@ -40,3 +182,4 @@ function gaag_get_shortname($shortname) {
 
     return $split[0];
 }
+
