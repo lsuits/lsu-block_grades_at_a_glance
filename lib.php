@@ -168,7 +168,7 @@ function gaag_get_grade_for_course($courseid, $userid) {
         'userid' => $userid
     ));
 
-    $report = new grade_report_grades_at_a_glance($courseid, $userid, $gpr, $course_context);
+    $report = new grade_report_grades_at_a_glance($userid, $courseid, $gpr, $course_context);
 
     var_dump($report->get_blank_hidden_total_and_adjust_bounds($courseid, $course_total_item, $finalgrade));
 
