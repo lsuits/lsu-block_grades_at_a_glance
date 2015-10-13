@@ -60,21 +60,12 @@ class block_grades_at_a_glance extends block_list {
                     $params = array('class' => 'gaag_course');
 
                     $left_part = html_writer::tag('span', $content, $params);
-                    echo 'user id = <br />';
-                    echo $USER->id;
-
-                    echo 'course id = <br />';
-                    echo $course->id;
                     
                     $content = gaag_get_grade_for_course($id, $USER->id);
-                    
-                    var_dump($content);
+
                     $params = array('class' => 'gaag_grade');
 
                     $right_part = html_writer::tag('span', $content, $params);
-                    
-                    echo ' showgrades = ' . $course->showgrades;
-
                     $right_part = $course->showgrades == 1 ? html_writer::tag('span', $content, $params) : html_writer::tag('span', '-', $params);
 
                     $content = $left_part . $right_part;

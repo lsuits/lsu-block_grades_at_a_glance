@@ -86,11 +86,6 @@ class grade_report_grades_at_a_glance extends grade_report {
                 }
 
                 $this->showtotalsifcontainhidden[$course->id] = grade_get_setting($course->id, 'report_overview_showtotalsifcontainhidden', $CFG->grade_report_overview_showtotalsifcontainhidden);
-                
-                echo 'show totals if contain hidden = ' ;
-                
-                var_dump($this->showtotalsifcontainhidden);
-                
                 $coursecontext = context_course::instance($course->id);
 
                 foreach ($roleids as $roleid) {
@@ -133,8 +128,6 @@ function gaag_get_grade_for_course($courseid, $userid) {
 
     $course_total_item = grade_item::fetch_course_item($courseid);
 
-    echo '<br /> var dump the course total item <br />';
-    var_dump($course_total_item);
     if (!$course_total_item) {
         return '-';
     }
@@ -158,9 +151,9 @@ function gaag_get_grade_for_course($courseid, $userid) {
             $course_total_item, true
         );
     }
-    
+
     $course_context = context_course::instance($courseid);
-    
+
     $gpr = new grade_plugin_return(array(
         'type' => 'report',
         'plugin' => 'grades_at_a_glance',
@@ -170,11 +163,8 @@ function gaag_get_grade_for_course($courseid, $userid) {
 
     $report = new grade_report_grades_at_a_glance($userid, $courseid, $gpr, $course_context);
 
-    var_dump($report->get_blank_hidden_total_and_adjust_bounds($courseid, $course_total_item, $finalgrade));
-
-    return($report->get_blank_hidden_total_and_adjust_bounds($courseid, $course_total_item, $finalgrade)['grade']);
-
-    //return $finalgrade;
+    $get_report_hidden_grades_calculator = $report->get_blank_hidden_total_and_adjust_bounds($courseid, $course_total_item, $finalgrade);
+    return $get_report_hidden_grades_calculator['grade'];
 }
 
 function gaag_get_shortname($shortname) {
