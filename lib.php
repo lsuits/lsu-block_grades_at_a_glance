@@ -103,6 +103,7 @@ class grade_report_grades_at_a_glance extends grade_report {
 function gaag_get_grade_for_course($courseid, $userid) {
     $course_total_item = grade_item::fetch_course_item($courseid);
     $course_context = context_course::instance($courseid);
+    $canviewhidden = has_capability('moodle/grade:viewhidden', $course_context, $userid);
     $report = new grade_report_grades_at_a_glance($userid, $courseid, null, $course_context);
     if (!$course_total_item) {
         $totalgrade = '-';
@@ -112,27 +113,39 @@ function gaag_get_grade_for_course($courseid, $userid) {
         'userid' => $userid
     );
     $user_grade_grade = new grade_grade($grade_grade_params);
-    if (!$user_grade_grade->finalgrade) {
-        $totalgrade = '-';
-    } else {
+    $user_grade_grade->grade_item =& $course_total_item;
+
+    $finalgrade = $user_grade_grade->finalgrade;
+    if (!$canviewhidden and !is_null($finalgrade)) {
+        $adjustedgrade = $report->get_blank_hidden_total_and_adjust_bounds($courseid,
+                                                                           $course_total_item,
+                                                                           $finalgrade);
+        // We temporarily adjust the view of this grade item - because the min and
+        // max are affected by the hidden values in the aggregation.
+        $course_total_item->grademax = $adjustedgrade['grademax'];
+        $course_total_item->grademin = $adjustedgrade['grademin'];
+    } else if (!is_null($finalgrade)) {
+        // Because the purpose of this block is to show MY grades as calculated for output
+        // we make sure we adhere to how hiding grades impacts the total grade regardless
+        // of if the user can view or not view hidden grades.
+        // Example: User may be a site admin, faculty assistant, or some other
+        // priveleged person and taking courses.
+        // In any case, it's best to calculate grades how the instructor specifies.
+        $adjustedgrade = $report->get_blank_hidden_total_and_adjust_bounds($courseid,
+                                                                           $course_total_item,
+                                                                           $finalgrade);
+        // We must use the specific max/min because it can be different for
+        // each grade_grade when items are excluded from sum of grades.
+        $course_total_item->grademin = $user_grade_grade->get_grade_min();
         $course_total_item->grademax = $user_grade_grade->get_grade_max();
-        $finalgrade = $user_grade_grade->finalgrade;
-        $get_report_hidden_grades_calculator = $report->get_blank_hidden_total_and_adjust_bounds($courseid, $course_total_item, $finalgrade);
-        $totalgrade = grade_format_gradevalue(
-            $get_report_hidden_grades_calculator['grade'],
-            $course_total_item, true
-        );
-        if ($course_total_item->hidden OR $totalgrade == '-') {
-            $totalgrade = get_string('hidden', 'block_grades_at_a_glance');
-        }
-        if (has_capability('moodle/grade:viewall', $course_context, $userid)) {
-        $finalgrade = $user_grade_grade->finalgrade;
-        $get_report_hidden_grades_calculator = $report->get_blank_hidden_total_and_adjust_bounds($courseid, $course_total_item, $finalgrade);
-            $totalgrade = grade_format_gradevalue(
-                $get_report_hidden_grades_calculator['grade'],
-                $course_total_item, true
-            );
-        }
+    }
+    if (isset($adjustedgrade)) {
+        $totalgrade = grade_format_gradevalue($adjustedgrade['grade'], $course_total_item, true);
+    } else {
+        $totalgrade = '-';
+    }
+    if ($course_total_item->hidden) {
+        $totalgrade = get_string('hidden', 'block_grades_at_a_glance');
     }
     return $totalgrade;
 }
