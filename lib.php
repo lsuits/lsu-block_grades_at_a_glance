@@ -115,6 +115,7 @@ function gaag_get_grade_for_course($courseid, $userid) {
     if (!$user_grade_grade->finalgrade) {
         $totalgrade = '-';
     } else {
+        $course_total_item->grademax = $user_grade_grade->get_grade_max();
         $finalgrade = $user_grade_grade->finalgrade;
         $get_report_hidden_grades_calculator = $report->get_blank_hidden_total_and_adjust_bounds($courseid, $course_total_item, $finalgrade);
         $totalgrade = grade_format_gradevalue(
@@ -125,8 +126,10 @@ function gaag_get_grade_for_course($courseid, $userid) {
             $totalgrade = get_string('hidden', 'block_grades_at_a_glance');
         }
         if (has_capability('moodle/grade:viewall', $course_context, $userid)) {
+        $finalgrade = $user_grade_grade->finalgrade;
+        $get_report_hidden_grades_calculator = $report->get_blank_hidden_total_and_adjust_bounds($courseid, $course_total_item, $finalgrade);
             $totalgrade = grade_format_gradevalue(
-                $user_grade_grade->finalgrade,
+                $get_report_hidden_grades_calculator['grade'],
                 $course_total_item, true
             );
         }
