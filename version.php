@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -15,5 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-$plugin->version = 2013062708;
+defined('MOODLE_INTERNAL') || die();
+
 $plugin->component = 'block_grades_at_a_glance';
+$plugin->version = 2017041300;
+$plugin->requires = 2016120500;
+$plugin->maturity = MATURITY_STABLE;
+$plugin->release = 'v2.0.0';
+$plugin->dependencies = array('block_course_overview' => ANY_VERSION);

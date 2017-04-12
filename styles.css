@@ -1,11 +1,11 @@
 .block_grades_at_a_glance p {
+    clear: both;
+    font-size: 74%;
+    height: 2.5em;
     margin: 0;
     padding: 0;
-    clear: both;
     text-align: right;
-    font-size: 74%;
     vertical-align: middle;
-    height: 2.5em;
 }
 
 .block_grades_at_a_glance span.gaag_course {
@@ -15,8 +15,8 @@
 }
 
 .block_grades_at_a_glance span.gaag_grade {
+    float: right;
     font-weight: bold;
     margin-top: .25em;
     padding-left: .50em;
-    float: right;
 }
