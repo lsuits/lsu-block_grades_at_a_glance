@@ -41,44 +41,27 @@ class grade_report_grades_at_a_glance extends grade_report {
 
     /**
      * Constructor. Sets local copies of user preferences and initialises grade_tree.
+     * Run for each course the user is enrolled in.
      * @param int $userid
      * @param string $context
      */
     public function __construct($userid, $courseid, $context) {
-        global $CFG, $COURSE, $DB;
+        global $CFG, $USER;
         parent::__construct($courseid, null, $context);
 
-        // Get the user (for full name).
-        $this->user = $DB->get_record('user', array('id' => $userid));
+        // Get the user (for later use in grade/report/lib.php)
+        $this->user = $USER;
 
-        // Load the user's courses.
-        $this->courses = enrol_get_users_courses($this->user->id, false, 'id, shortname, showgrades');
-
+        // Create an array (for later use in grade/report/lib.php)
         $this->showtotalsifcontainhidden = array();
-        
-        $this->studentcourseids = array();
-        $this->teachercourses = array();
-        $roleids = explode(',', get_config('moodle', 'gradebookroles'));
 
-        if ($this->courses) {
-            foreach ($this->courses as $course) {
-                $this->showtotalsifcontainhidden[$course->id] = grade_get_setting($course->id, 'report_overview_showtotalsifcontainhidden', $CFG->grade_report_overview_showtotalsifcontainhidden);
-                $coursecontext = context_course::instance($course->id);
-                foreach ($roleids as $roleid) {
-                    if (user_has_role_assignment($userid, $roleid, $coursecontext->id)) {
-                        $this->studentcourseids[$course->id] = $course->id;
-                        // We only need to check if one of the roleids has been assigned.
-                        break;
-                    }
-                }
-                if (has_capability('moodle/grade:viewall', $coursecontext, $userid)) {
-                    $this->teachercourses[$course->id] = $course;
-                }
-            }
+        // Sanity check
+        if ($courseid) {
+            // Populate this (for later use in grade/report/lib.php)
+            $this->showtotalsifcontainhidden[$courseid] = grade_get_setting($courseid, 'report_overview_showtotalsifcontainhidden', $CFG->grade_report_overview_showtotalsifcontainhidden);
         }
-
-
     }
+
     function process_action($target, $action) {
     }
 
